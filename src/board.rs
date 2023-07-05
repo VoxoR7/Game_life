@@ -8,64 +8,57 @@ pub struct Board {
 }
 
 impl Board {
+    pub fn is_alive(&self, row: isize, col: isize) -> bool {
+        if row < 0 || col < 0 {
+            return false;
+        }
+
+        let urow: usize;
+        let ucol: usize;
+
+        /* SAFETY : row and col cannot be negative number,
+            we check it right before */
+        unsafe {
+            urow = row.try_into().unwrap_unchecked();
+            ucol = col.try_into().unwrap_unchecked();
+        }
+
+        if let Some(vec_row) = self.board.get(urow) {
+            if let Some(cell) = vec_row.get(ucol) {
+                return CellState::Alive == *cell;
+            }
+        }
+
+        false
+    }
+
     /// Return the number of cell alive in the 8 surrounding cell
-    fn get_cell_alive_arround(&self, row: usize, col: usize) -> u8 {
+    fn get_cell_alive_arround(&self, row: isize, col: isize) -> u8 {
         let mut surrounding_alive = 0;
 
-        if row > 0 {
-            let vec_row = &self.board[row - 1];
-
-            if col > 0 {
-                if vec_row[col - 1] == CellState::Alive {
-                    surrounding_alive += 1;
-                }
-            }
-
-            if let Some(cell) = vec_row.get(col) {
-                if *cell == CellState::Alive {
-                    surrounding_alive += 1;
-                }
-            }
-
-            if let Some(cell) = vec_row.get(col + 1) {
-                if *cell == CellState::Alive {
-                    surrounding_alive += 1;
-                }
-            }
+        if self.is_alive(row - 1, col - 1) {
+            surrounding_alive += 1;
         }
-
-        if let Some(vec_row) = self.board.get(row) {
-            if col > 0 {
-                if vec_row[col - 1] == CellState::Alive {
-                    surrounding_alive += 1;
-                }
-            }
-
-            if let Some(cell) = vec_row.get(col + 1) {
-                if *cell == CellState::Alive {
-                    surrounding_alive += 1;
-                }
-            }
+        if self.is_alive(row - 1, col) {
+            surrounding_alive += 1;
         }
-
-        if let Some(vec_row) = self.board.get(row + 1) {
-            if col > 0 {
-                if vec_row[col - 1] == CellState::Alive {
-                    surrounding_alive += 1;
-                }
-            }
-
-            if let Some(cell) = vec_row.get(col) {
-                if *cell == CellState::Alive {
-                    surrounding_alive += 1;
-                }
-            }
-
-            if let Some(cell) = vec_row.get(col + 1) {
-                if *cell == CellState::Alive {
-                    surrounding_alive += 1;
-                }
-            }
+        if self.is_alive(row - 1, col + 1) {
+            surrounding_alive += 1;
+        }
+        if self.is_alive(row, col - 1) {
+            surrounding_alive += 1;
+        }
+        if self.is_alive(row, col + 1) {
+            surrounding_alive += 1;
+        }
+        if self.is_alive(row + 1, col - 1) {
+            surrounding_alive += 1;
+        }
+        if self.is_alive(row + 1, col) {
+            surrounding_alive += 1;
+        }
+        if self.is_alive(row + 1, col + 1) {
+            surrounding_alive += 1;
         }
 
         surrounding_alive
@@ -79,7 +72,7 @@ impl Board {
     pub fn next_turn(&mut self) {
         for (row, outer_elem) in self.board.iter().enumerate() {
             for (col, _) in outer_elem.iter().enumerate() {
-                let surrounding_alive = self.get_cell_alive_arround(row, col);
+                let surrounding_alive = self.get_cell_alive_arround(row as isize, col as isize);
 
                 if self.board[row][col] == CellState::Alive {
                     if surrounding_alive < 2 {
@@ -134,7 +127,11 @@ impl Board {
 
     /// Return a board constitued of only dead cell
     /// with size col and row
-    pub fn new(row: usize, col: usize) -> Board {
+    pub fn new(row: usize, col: usize) -> Option<Board> {
+        if row > isize::MAX.try_into().unwrap() || col > isize::MAX.try_into().unwrap() {
+            return None
+        }
+
         let mut vec:Vec<Vec<CellState>> = Vec::with_capacity(row);
         for i in 0..row {
             vec.push(Vec::with_capacity(col));
@@ -147,10 +144,10 @@ impl Board {
 
         dbg!("a board of size ^{} by <{} as been created !", vec.len(), vec[0].len());
 
-        Board { 
+        Some(Board { 
             board: vec,
             second_board: vec2,
             turn: 0,
-        }
+        })
     }
 }

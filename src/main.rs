@@ -6,7 +6,7 @@ const DEFAULT_LOOP: u32 = 100;
 const DEFAULT_TIME_MS: u64 = 500;
 
 fn main() {
-    let mut main_board = board::Board::new(20, 20);
+    let mut main_board = board::Board::new(20, 30).expect("Board too large, can't create board !");
 
     main_board.set_cell(4, 10, board::CellState::Alive);
     main_board.set_cell(5, 10, board::CellState::Alive);
