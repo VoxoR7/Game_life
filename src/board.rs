@@ -8,7 +8,13 @@ pub struct Board {
 }
 
 impl Board {
-    pub fn is_alive(&self, row: isize, col: isize) -> bool {
+    // get the number row and col of the board
+    pub fn get_size(&self) -> (usize, usize) {
+        (self.board.len(), self.board.get(0).expect("The board must be at least 1x1 !").len())
+    }
+
+    // return true if the cell is alive, false otherwise
+    fn is_alive(&self, row: isize, col: isize) -> bool {
         if row < 0 || col < 0 {
             return false;
         }
@@ -24,8 +30,8 @@ impl Board {
         }
 
         if let Some(vec_row) = self.board.get(urow) {
-            if let Some(cell) = vec_row.get(ucol) {
-                return CellState::Alive == *cell;
+            if let Some(CellState::Alive) = vec_row.get(ucol) {
+                return true;
             }
         }
 
@@ -101,21 +107,6 @@ impl Board {
         self.turn += 1;
     }
 
-    /// print to the screen the board
-    pub fn print(&self) {
-        println!("----- Turn : {} -----", self.turn);
-
-        for outer_elem in self.board.iter() {
-            for inner_elem in outer_elem.iter() {
-                match inner_elem {
-                    CellState::Dead => print!("   "),
-                    CellState::Alive => print!(" O "),
-                }
-            }
-            print!("\n");
-        }
-    }
-
     /// set a particular cell to a state
     pub fn set_cell(&mut self, row: usize, col: usize, state: CellState) {
         if let Some(vec_row) = self.board.get_mut(row) {
@@ -125,10 +116,21 @@ impl Board {
         }
     }
 
+    /// get a particular cell state
+    pub fn get_cell(&self, row: usize, col: usize) -> Option<CellState> {
+        if let Some(vec_row) = self.board.get(row) {
+            if let Some(cell) = vec_row.get(col) {
+                return Some(*cell);
+            }
+        }
+
+        None
+    }
+
     /// Return a board constitued of only dead cell
     /// with size col and row
     pub fn new(row: usize, col: usize) -> Option<Board> {
-        if row > isize::MAX.try_into().unwrap() || col > isize::MAX.try_into().unwrap() {
+        if row > isize::MAX.try_into().unwrap() || col > isize::MAX.try_into().unwrap() || row == 0 || col == 0 {
             return None
         }
 
