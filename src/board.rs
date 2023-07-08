@@ -46,29 +46,17 @@ impl Board {
     fn get_cell_alive_arround(&self, row: isize, col: isize) -> u8 {
         let mut surrounding_alive = 0;
 
-        if self.is_alive(row - 1, col - 1) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row - 1, col) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row - 1, col + 1) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row, col - 1) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row, col + 1) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row + 1, col - 1) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row + 1, col) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row + 1, col + 1) {
-            surrounding_alive += 1;
+        for r in row-1..=row+1 {
+            for c in col-1..=col+1 {
+                // on ignore la cellule actuelle
+                if r == row && c == col {
+                    continue;
+                }
+
+                if self.is_alive(r, c) {
+                    surrounding_alive += 1;
+                }        
+            }
         }
 
         surrounding_alive
