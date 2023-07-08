@@ -7,6 +7,9 @@ pub enum CellState {
 }
 
 pub struct Board {
+    // le Vec de Vec, je trouve que c'est pas pratique à utiliser
+    // pour moi c'est simplifiable avec un seul Vec ou array
+    // et en utilisant (row x col) pour l'indexation.
     board: Vec<Vec<CellState>>,
     second_board: Vec<Vec<CellState>>,
     turn: u32,
@@ -46,8 +49,8 @@ impl Board {
     fn get_cell_alive_arround(&self, row: isize, col: isize) -> u8 {
         let mut surrounding_alive = 0;
 
-        for r in row-1..=row+1 {
-            for c in col-1..=col+1 {
+        for r in row - 1..=row + 1 {
+            for c in col - 1..=col + 1 {
                 // on ignore la cellule actuelle
                 if r == row && c == col {
                     continue;
@@ -55,7 +58,7 @@ impl Board {
 
                 if self.is_alive(r, c) {
                     surrounding_alive += 1;
-                }        
+                }
             }
         }
 
@@ -68,6 +71,12 @@ impl Board {
 
     /// calculate the next turn
     pub fn next_turn(&mut self) {
+        // pour le next_turn, plutôt que d'écrire dans tableau 2 puis copier tableau 2 dans tableau 1, j'aurais
+        // * soit retourné un nouveau tableau, mais avec un léger risque de perf si le tableau est trop gros,
+        // risque que l'on peut réduire en utilisant des const generics lors de la création du tableau
+        // ( https://practice.rs/generics-traits/const-generics.html ) et utiliser un array plutôt qu'un Vec
+        // * soit utilisé un systeme de double surface avec flipping ( ~ back buffering )
+
         for (row, outer_elem) in self.board.iter().enumerate() {
             for (col, _) in outer_elem.iter().enumerate() {
                 let surrounding_alive = self.get_cell_alive_arround(row as isize, col as isize);
