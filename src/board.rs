@@ -1,3 +1,5 @@
+const ISIZE_MAX: usize = isize::MAX as usize;
+
 #[derive(Copy, Clone, PartialEq)]
 pub enum CellState {Dead, Alive}
 
@@ -19,15 +21,8 @@ impl Board {
             return false;
         }
 
-        let urow: usize;
-        let ucol: usize;
-
-        /* SAFETY : row and col cannot be negative number,
-            we check it right before */
-        unsafe {
-            urow = row.try_into().unwrap_unchecked();
-            ucol = col.try_into().unwrap_unchecked();
-        }
+        let urow = row as usize;
+        let ucol = col as usize;
 
         if let Some(vec_row) = self.board.get(urow) {
             if let Some(CellState::Alive) = vec_row.get(ucol) {
@@ -130,7 +125,7 @@ impl Board {
     /// Return a board constitued of only dead cell
     /// with size col and row
     pub fn new(row: usize, col: usize) -> Option<Board> {
-        if row > isize::MAX.try_into().unwrap() || col > isize::MAX.try_into().unwrap() || row == 0 || col == 0 {
+        if row > ISIZE_MAX || col > ISIZE_MAX || row == 0 || col == 0 {
             return None
         }
 
