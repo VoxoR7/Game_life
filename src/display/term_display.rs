@@ -1,8 +1,7 @@
 use super::display;
 use crate::board;
 
-pub struct TermDisplay {
-}
+pub struct TermDisplay {}
 
 impl display::Displayable for TermDisplay {
     fn print(&self, board: &board::Board) {
@@ -24,7 +23,6 @@ impl display::Displayable for TermDisplay {
 
 impl TermDisplay {
     pub fn new() -> TermDisplay {
-        TermDisplay {
-        }
+        TermDisplay {}
     }
 }

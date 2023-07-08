@@ -1,7 +1,10 @@
 const ISIZE_MAX: usize = isize::MAX as usize;
 
 #[derive(Copy, Clone, PartialEq)]
-pub enum CellState {Dead, Alive}
+pub enum CellState {
+    Dead,
+    Alive,
+}
 
 pub struct Board {
     board: Vec<Vec<CellState>>,
@@ -12,7 +15,13 @@ pub struct Board {
 impl Board {
     // get the number row and col of the board
     pub fn get_size(&self) -> (usize, usize) {
-        (self.board.len(), self.board.get(0).expect("The board must be at least 1x1 !").len())
+        (
+            self.board.len(),
+            self.board
+                .get(0)
+                .expect("The board must be at least 1x1 !")
+                .len(),
+        )
     }
 
     // return true if the cell is alive, false otherwise
@@ -126,10 +135,10 @@ impl Board {
     /// with size col and row
     pub fn new(row: usize, col: usize) -> Option<Board> {
         if row > ISIZE_MAX || col > ISIZE_MAX || row == 0 || col == 0 {
-            return None
+            return None;
         }
 
-        let mut vec:Vec<Vec<CellState>> = Vec::with_capacity(row);
+        let mut vec: Vec<Vec<CellState>> = Vec::with_capacity(row);
         for i in 0..row {
             vec.push(Vec::with_capacity(col));
             for _ in 0..col {
@@ -139,9 +148,13 @@ impl Board {
 
         let vec2 = vec.clone();
 
-        dbg!("a board of size ^{} by <{} as been created !", vec.len(), vec[0].len());
+        dbg!(
+            "a board of size ^{} by <{} as been created !",
+            vec.len(),
+            vec[0].len()
+        );
 
-        Some(Board { 
+        Some(Board {
             board: vec,
             second_board: vec2,
             turn: 0,
