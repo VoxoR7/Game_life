@@ -85,19 +85,15 @@ impl Board {
                 let surrounding_alive = self.get_cell_alive_arround(row as isize, col as isize);
 
                 if self.board[row][col] == CellState::Alive {
-                    if surrounding_alive < 2 {
-                        self.second_board[row][col] = CellState::Dead;
-                    } else if surrounding_alive > 3 {
+                    if !(2..=3).contains(&surrounding_alive) {
                         self.second_board[row][col] = CellState::Dead;
                     } else {
                         self.second_board[row][col] = CellState::Alive;
                     }
+                } else if surrounding_alive == 3 {
+                    self.second_board[row][col] = CellState::Alive;
                 } else {
-                    if surrounding_alive == 3 {
-                        self.second_board[row][col] = CellState::Alive;
-                    } else {
-                        self.second_board[row][col] = CellState::Dead;
-                    }
+                    self.second_board[row][col] = CellState::Dead;
                 }
             }
         }
