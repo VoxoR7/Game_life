@@ -1,10 +1,9 @@
-use super::display;
+use super::displayable;
 use crate::board;
 
-pub struct TermDisplay {
-}
+pub struct TermDisplay {}
 
-impl display::Displayable for TermDisplay {
+impl displayable::Displayable for TermDisplay {
     fn print(&self, board: &board::Board) {
         println!("----- Turn : {} -----", board.get_turn());
 
@@ -17,14 +16,13 @@ impl display::Displayable for TermDisplay {
                     board::CellState::Alive => print!(" O "),
                 }
             }
-            print!("\n");
+            println!();
         }
     }
 }
 
 impl TermDisplay {
     pub fn new() -> TermDisplay {
-        TermDisplay {
-        }
+        TermDisplay {}
     }
 }

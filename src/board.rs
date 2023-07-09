@@ -1,7 +1,15 @@
+const ISIZE_MAX: usize = isize::MAX as usize;
+
 #[derive(Copy, Clone, PartialEq)]
-pub enum CellState {Dead, Alive}
+pub enum CellState {
+    Dead,
+    Alive,
+}
 
 pub struct Board {
+    // le Vec de Vec, je trouve que c'est pas pratique à utiliser
+    // pour moi c'est simplifiable avec un seul Vec ou array
+    // et en utilisant (row x col) pour l'indexation.
     board: Vec<Vec<CellState>>,
     second_board: Vec<Vec<CellState>>,
     turn: u32,
@@ -10,7 +18,13 @@ pub struct Board {
 impl Board {
     // get the number row and col of the board
     pub fn get_size(&self) -> (usize, usize) {
-        (self.board.len(), self.board.get(0).expect("The board must be at least 1x1 !").len())
+        (
+            self.board.len(),
+            self.board
+                .get(0)
+                .expect("The board must be at least 1x1 !")
+                .len(),
+        )
     }
 
     // return true if the cell is alive, false otherwise
@@ -19,15 +33,8 @@ impl Board {
             return false;
         }
 
-        let urow: usize;
-        let ucol: usize;
-
-        /* SAFETY : row and col cannot be negative number,
-            we check it right before */
-        unsafe {
-            urow = row.try_into().unwrap_unchecked();
-            ucol = col.try_into().unwrap_unchecked();
-        }
+        let urow = row as usize;
+        let ucol = col as usize;
 
         if let Some(vec_row) = self.board.get(urow) {
             if let Some(CellState::Alive) = vec_row.get(ucol) {
@@ -42,29 +49,17 @@ impl Board {
     fn get_cell_alive_arround(&self, row: isize, col: isize) -> u8 {
         let mut surrounding_alive = 0;
 
-        if self.is_alive(row - 1, col - 1) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row - 1, col) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row - 1, col + 1) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row, col - 1) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row, col + 1) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row + 1, col - 1) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row + 1, col) {
-            surrounding_alive += 1;
-        }
-        if self.is_alive(row + 1, col + 1) {
-            surrounding_alive += 1;
+        for r in row - 1..=row + 1 {
+            for c in col - 1..=col + 1 {
+                // on ignore la cellule actuelle
+                if r == row && c == col {
+                    continue;
+                }
+
+                if self.is_alive(r, c) {
+                    surrounding_alive += 1;
+                }
+            }
         }
 
         surrounding_alive
@@ -76,24 +71,26 @@ impl Board {
 
     /// calculate the next turn
     pub fn next_turn(&mut self) {
+        // pour le next_turn, plutôt que d'écrire dans tableau 2 puis copier tableau 2 dans tableau 1, j'aurais
+        // * soit retourné un nouveau tableau, mais avec un léger risque de perf si le tableau est trop gros,
+        // risque que l'on peut réduire en utilisant des const generics lors de la création du tableau
+        // ( https://practice.rs/generics-traits/const-generics.html ) et utiliser un array plutôt qu'un Vec
+        // * soit utilisé un systeme de double surface avec flipping ( ~ back buffering )
+
         for (row, outer_elem) in self.board.iter().enumerate() {
             for (col, _) in outer_elem.iter().enumerate() {
                 let surrounding_alive = self.get_cell_alive_arround(row as isize, col as isize);
 
                 if self.board[row][col] == CellState::Alive {
-                    if surrounding_alive < 2 {
-                        self.second_board[row][col] = CellState::Dead;
-                    } else if surrounding_alive > 3 {
+                    if !(2..=3).contains(&surrounding_alive) {
                         self.second_board[row][col] = CellState::Dead;
                     } else {
                         self.second_board[row][col] = CellState::Alive;
                     }
+                } else if surrounding_alive == 3 {
+                    self.second_board[row][col] = CellState::Alive;
                 } else {
-                    if surrounding_alive == 3 {
-                        self.second_board[row][col] = CellState::Alive;
-                    } else {
-                        self.second_board[row][col] = CellState::Dead;
-                    }
+                    self.second_board[row][col] = CellState::Dead;
                 }
             }
         }
@@ -130,11 +127,11 @@ impl Board {
     /// Return a board constitued of only dead cell
     /// with size col and row
     pub fn new(row: usize, col: usize) -> Option<Board> {
-        if row > isize::MAX.try_into().unwrap() || col > isize::MAX.try_into().unwrap() || row == 0 || col == 0 {
-            return None
+        if row > ISIZE_MAX || col > ISIZE_MAX || row == 0 || col == 0 {
+            return None;
         }
 
-        let mut vec:Vec<Vec<CellState>> = Vec::with_capacity(row);
+        let mut vec: Vec<Vec<CellState>> = Vec::with_capacity(row);
         for i in 0..row {
             vec.push(Vec::with_capacity(col));
             for _ in 0..col {
@@ -144,9 +141,13 @@ impl Board {
 
         let vec2 = vec.clone();
 
-        dbg!("a board of size ^{} by <{} as been created !", vec.len(), vec[0].len());
+        dbg!(
+            "a board of size ^{} by <{} as been created !",
+            vec.len(),
+            vec[0].len()
+        );
 
-        Some(Board { 
+        Some(Board {
             board: vec,
             second_board: vec2,
             turn: 0,
