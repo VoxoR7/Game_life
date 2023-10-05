@@ -3,8 +3,8 @@ use crate::board;
 
 extern crate sdl2;
 
-const DEFAULT_WIDTH: usize = 1080;
-const DEFAULT_HEIGHT: usize = 720;
+const DEFAULT_WIDTH: usize = 1920;
+const DEFAULT_HEIGHT: usize = 1080;
 
 const DEFAULT_CONTROL_HEIGHT: usize = 120;
 
@@ -78,29 +78,51 @@ impl displayable::Displayable for SdlDisplay {
         }
 
         if self.event.mouse_state().left() && self.touch_pressed == false {
-            self.touch_pressed = true;
-            if self.event.mouse_state().y() > DEFAULT_CONTROL_HEIGHT as i32 {
-                return None
-            }
+            if self.event.mouse_state().y() < DEFAULT_CONTROL_HEIGHT as i32 {
+                self.touch_pressed = true;
+                let x = self.event.mouse_state().x();
+                if x < (DEFAULT_WIDTH as f64 * (DEFAULT_STOP_WIDTH / 100.0)) as i32 {
+                    return Some(crate::display::DisplayControl::STOP)
+                }
 
-            if self.event.mouse_state().x() < (DEFAULT_WIDTH as f64 * (DEFAULT_STOP_WIDTH / 100.0)) as i32 {
-                return Some(crate::display::DisplayControl::STOP)
-            }
+                if x < (DEFAULT_WIDTH as f64 * (DEFAULT_STOP_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_CONTINUE_WIDTH / 100.0)) as i32 {
+                    return Some(crate::display::DisplayControl::CONTINUE)
+                }
 
-            if self.event.mouse_state().x() < (DEFAULT_WIDTH as f64 * (DEFAULT_STOP_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_CONTINUE_WIDTH / 100.0)) as i32 {
-                return Some(crate::display::DisplayControl::CONTINUE)
-            }
+                if x < (DEFAULT_WIDTH as f64 * (DEFAULT_STOP_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_CONTINUE_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_STEP_WIDTH / 100.0)) as i32 {
+                    return Some(crate::display::DisplayControl::STEP)
+                }
 
-            if self.event.mouse_state().x() < (DEFAULT_WIDTH as f64 * (DEFAULT_STOP_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_CONTINUE_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_STEP_WIDTH / 100.0)) as i32 {
-                return Some(crate::display::DisplayControl::STEP)
-            }
-
-            if self.event.mouse_state().x() < (DEFAULT_WIDTH as f64 * (DEFAULT_STOP_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_CONTINUE_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_STEP_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_QUIT_WIDTH / 100.0)) as i32 {
-                return Some(crate::display::DisplayControl::QUIT)
+                if x < (DEFAULT_WIDTH as f64 * (DEFAULT_STOP_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_CONTINUE_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_STEP_WIDTH / 100.0) + DEFAULT_WIDTH as f64 * (DEFAULT_QUIT_WIDTH / 100.0)) as i32 {
+                    return Some(crate::display::DisplayControl::QUIT)
+                }
             }
         }
 
-        return None
+        None
+    }
+
+    fn cell_control(&mut self, board: &board::Board) -> Option<(u32, u32)> {
+        let (row, col) = board.get_size();
+        self.event.pump_events();
+
+        if !self.event.mouse_state().left() && self.touch_pressed == true {
+            self.touch_pressed = false;
+        }
+
+        if self.event.mouse_state().left() && self.touch_pressed == false {
+            if self.event.mouse_state().y() >= DEFAULT_CONTROL_HEIGHT as i32 {
+                let y = self.event.mouse_state().y() - DEFAULT_CONTROL_HEIGHT as i32;
+                let y_cell = y as u32 / ((DEFAULT_HEIGHT as u32 - DEFAULT_CONTROL_HEIGHT as u32) / row as u32);
+
+                let x = self.event.mouse_state().x() as i32;
+                let x_cell = x as u32 / (DEFAULT_WIDTH as u32 / col as u32);
+
+                return Some((y_cell, x_cell));
+            }
+        }
+
+        None
     }
 }
 

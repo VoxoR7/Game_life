@@ -37,6 +37,10 @@ impl displayable::Displayable for TermDisplay {
             }
         }
     }
+
+    fn cell_control(&mut self, _board: &board::Board) -> Option<(u32, u32)> {
+        None
+    }
 }
 
 impl TermDisplay {

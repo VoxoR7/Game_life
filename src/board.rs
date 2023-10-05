@@ -113,6 +113,19 @@ impl Board {
         }
     }
 
+    /// reverse a particular cell
+    pub fn reverse_cell(&mut self, row: usize, col: usize) {
+        if let Some(vec_row) = self.board.get_mut(row) {
+            if let Some(cell) = vec_row.get_mut(col) {
+                if *cell == CellState::Alive {
+                    *cell = CellState::Dead;
+                } else {
+                    *cell = CellState::Alive;
+                }
+            }
+        }
+    }
+
     /// get a particular cell state
     pub fn get_cell(&self, row: usize, col: usize) -> Option<CellState> {
         if let Some(vec_row) = self.board.get(row) {

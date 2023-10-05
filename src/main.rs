@@ -3,11 +3,11 @@ use std::{thread, time};
 mod board;
 mod display;
 
-const DEFAULT_TIME_MS: u128 = 1000;
+const DEFAULT_TIME_MS: u128 = 200;
 const DEFAULT_REFRESH_MS: u64 = 33;
 
 fn main() {
-    let mut main_board = board::Board::new(20, 30).expect("Board too large, can't create board !");
+    let mut main_board = board::Board::new(80, 120).expect("Board too large, can't create board !");
     let mut tdisplay = display::new(display::DisplayType::TERM);
     let mut sdisplay = display::new(display::DisplayType::SDL);
 
@@ -50,6 +50,11 @@ fn main() {
                 while ctrl.is_none() {
                     thread::sleep(time::Duration::from_millis(DEFAULT_REFRESH_MS));
                     ctrl = sdisplay.control();
+                    if let Some((y, x)) = sdisplay.cell_control(&main_board) {
+                        main_board.reverse_cell(y as usize, x as usize);
+                        tdisplay.print(&main_board);
+                        sdisplay.print(&main_board);
+                    }
                 }
                 command = ctrl.unwrap();
             },
