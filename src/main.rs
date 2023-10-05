@@ -3,7 +3,8 @@ use std::{thread, time};
 mod board;
 mod display;
 
-const DEFAULT_TIME_MS: u64 = 1000;
+const DEFAULT_TIME_MS: u128 = 1000;
+const DEFAULT_REFRESH_MS: u64 = 33;
 
 fn main() {
     let mut main_board = board::Board::new(20, 30).expect("Board too large, can't create board !");
@@ -22,32 +23,43 @@ fn main() {
     sdisplay.print(&main_board);
 
     let mut ctrl = sdisplay.control();
+    let mut command = ctrl.map_or(display::DisplayControl::STOP, |ctrl| ctrl);
 
-    while ctrl.is_none() {
-        ctrl = sdisplay.control();
-    }
+    'inner_while: while command != display::DisplayControl::QUIT {
+        match command {
+            display::DisplayControl::CONTINUE => {
+                let now = time::Instant::now();
 
-    let mut command = ctrl.unwrap();
+                while now.elapsed().as_millis() < DEFAULT_TIME_MS {
+                    thread::sleep(time::Duration::from_millis(DEFAULT_REFRESH_MS));
+                    ctrl = sdisplay.control();
+                    if ctrl.is_some() {
+                        command = ctrl.unwrap();
+                        if command != display::DisplayControl::CONTINUE {
+                            continue 'inner_while;
+                        }
+                    }
+                }
 
-    while command != display::DisplayControl::QUIT {
-        main_board.next_turn();
-        tdisplay.print(&main_board);
-        sdisplay.print(&main_board);
-
-        if command == display::DisplayControl::CONTINUE {
-            thread::sleep(time::Duration::from_millis(DEFAULT_TIME_MS));
-
-            ctrl = sdisplay.control();
-            if ctrl.is_some() {
+                main_board.next_turn();
+                tdisplay.print(&main_board);
+                sdisplay.print(&main_board);
+            },
+            display::DisplayControl::STOP => {
+                ctrl = None;
+                while ctrl.is_none() {
+                    thread::sleep(time::Duration::from_millis(DEFAULT_REFRESH_MS));
+                    ctrl = sdisplay.control();
+                }
                 command = ctrl.unwrap();
-            }
-        } else {
-            ctrl = sdisplay.control();
-            while ctrl.is_none() {
-                ctrl = sdisplay.control();
-            }
-
-            command = ctrl.unwrap();
+            },
+            display::DisplayControl::STEP => {
+                main_board.next_turn();
+                tdisplay.print(&main_board);
+                sdisplay.print(&main_board);
+                command = display::DisplayControl::STOP
+            },
+            display::DisplayControl::QUIT => break,
         }
     }
 }
