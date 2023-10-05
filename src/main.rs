@@ -3,12 +3,14 @@ use std::{thread, time};
 mod board;
 mod display;
 
-const DEFAULT_LOOP: u32 = 100;
 const DEFAULT_TIME_MS: u64 = 1000;
 
 fn main() {
     let mut main_board = board::Board::new(20, 30).expect("Board too large, can't create board !");
-    let display = display::new();
+    let mut tdisplay = display::new(display::DisplayType::TERM);
+    let mut sdisplay = display::new(display::DisplayType::SDL);
+
+    main_board.set_cell(0, 1, board::CellState::Alive);
 
     main_board.set_cell(4, 10, board::CellState::Alive);
     main_board.set_cell(5, 10, board::CellState::Alive);
@@ -16,11 +18,36 @@ fn main() {
     main_board.set_cell(7, 10, board::CellState::Alive);
     main_board.set_cell(7, 11, board::CellState::Alive);
 
-    display.print(&main_board);
+    tdisplay.print(&main_board);
+    sdisplay.print(&main_board);
 
-    while main_board.get_turn() < DEFAULT_LOOP {
-        thread::sleep(time::Duration::from_millis(DEFAULT_TIME_MS));
+    let mut ctrl = sdisplay.control();
+
+    while ctrl.is_none() {
+        ctrl = sdisplay.control();
+    }
+
+    let mut command = ctrl.unwrap();
+
+    while command != display::DisplayControl::QUIT {
         main_board.next_turn();
-        display.print(&main_board);
+        tdisplay.print(&main_board);
+        sdisplay.print(&main_board);
+
+        if command == display::DisplayControl::CONTINUE {
+            thread::sleep(time::Duration::from_millis(DEFAULT_TIME_MS));
+
+            ctrl = sdisplay.control();
+            if ctrl.is_some() {
+                command = ctrl.unwrap();
+            }
+        } else {
+            ctrl = sdisplay.control();
+            while ctrl.is_none() {
+                ctrl = sdisplay.control();
+            }
+
+            command = ctrl.unwrap();
+        }
     }
 }

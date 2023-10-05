@@ -116,9 +116,7 @@ impl Board {
     /// get a particular cell state
     pub fn get_cell(&self, row: usize, col: usize) -> Option<CellState> {
         if let Some(vec_row) = self.board.get(row) {
-            if let Some(cell) = vec_row.get(col) {
-                return Some(*cell);
-            }
+            return vec_row.get(col).copied();
         }
 
         None
@@ -141,7 +139,7 @@ impl Board {
 
         let vec2 = vec.clone();
 
-        dbg!(
+        println!(
             "a board of size ^{} by <{} as been created !",
             vec.len(),
             vec[0].len()
