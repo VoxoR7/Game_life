@@ -3,7 +3,7 @@ use std::{thread, time};
 mod board;
 mod display;
 
-const DEFAULT_TIME_MS: u128 = 200;
+const DEFAULT_TIME_MS: u128 = 50;
 const DEFAULT_REFRESH_MS: u64 = 33;
 
 fn main() {
@@ -32,9 +32,7 @@ fn main() {
 
                 while now.elapsed().as_millis() < DEFAULT_TIME_MS {
                     thread::sleep(time::Duration::from_millis(DEFAULT_REFRESH_MS));
-                    ctrl = sdisplay.control();
-                    if ctrl.is_some() {
-                        command = ctrl.unwrap();
+                    if let Some(command) = sdisplay.control() {
                         if command != display::DisplayControl::CONTINUE {
                             continue 'inner_while;
                         }
